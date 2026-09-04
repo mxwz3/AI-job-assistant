@@ -129,6 +129,7 @@ class GroqService:
         system_prompt: str,
         user_content: str,
         temperature: float = 0.3,
+        max_tokens: int | None = None,
     ) -> dict[str, Any]:
         client = self._create_client()
 
@@ -137,12 +138,18 @@ class GroqService:
             {"role": "user", "content": user_content},
         ]
 
+        request_kwargs: dict[str, Any] = {
+            "model": self.model,
+            "messages": messages,
+            "temperature": temperature,
+        }
+        if max_tokens is not None:
+            # 不传时由 Groq 按默认上限请求，可能超过模型输出限制触发 429，
+            # 显式传入可避免 "Requested output tokens exceed limit" 报错。
+            request_kwargs["max_tokens"] = max_tokens
+
         try:
-            response = client.chat.completions.create(
-                model=self.model,
-                messages=messages,
-                temperature=temperature,
-            )
+            response = client.chat.completions.create(**request_kwargs)
         except GroqError as exc:
             raise GroqAPIError(f"Groq API 调用失败: {exc}") from exc
         except Exception as exc:
@@ -181,6 +188,7 @@ class GroqService:
             RESUME_EXTRACTION_PROMPT,
             f"请分析以下简历：\n\n{resume_text}",
             temperature=0.3,
+            max_tokens=800,
         )
         try:
             return ResumeInfo.model_validate(parsed)
