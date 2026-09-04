@@ -188,7 +188,7 @@ class GroqService:
             RESUME_EXTRACTION_PROMPT,
             f"请分析以下简历：\n\n{resume_text}",
             temperature=0.3,
-            max_tokens=800,
+            max_tokens=950,
         )
         try:
             return ResumeInfo.model_validate(parsed)
