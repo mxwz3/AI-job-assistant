@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 求职助手 · 产品低保真原型（5 页流程稿）</title>
+<style>
+  /* ============ 低保真原型全局样式：灰阶 + 语义色 ============ */
+  :root {
+    --line: #9aa0a6;        /* 线框描边 */
+    --line-soft: #c9ccd1;
+    --ink: #2b2f33;         /* 主文字 */
+    --ink-2: #6b7178;       /* 次文字 */
+    --fill: #f1f2f4;        /* 灰底 */
+    --fill-2: #e4e6e9;
+    --paper: #ffffff;
+    --accent: #10b981;      /* 流程主色：绿色（仅用于步骤/成功语义） */
+    --accent-soft: #e7f7f0;
+    --warn: #f5a623;        /* 部分匹配/警告 */
+    --warn-soft: #fdf3e0;
+    --danger: #e05252;      /* 不匹配/错误 */
+    --danger-soft: #fbecec;
+    --note: #fff8d6;        /* 标注底色 */
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+    background: #dfe2e6; color: var(--ink); font-size: 13px; padding-bottom: 40px;
+  }
+
+  /* ============ 原型工具栏（非产品 UI） ============ */
+  .proto-bar {
+    background: #23272c; color: #d6d9dd; display: flex; align-items: center;
+    gap: 16px; padding: 8px 16px; position: sticky; top: 0; z-index: 99; flex-wrap: wrap;
+  }
+  .proto-bar .tag {
+    background: #3a4046; border: 1px solid #55595f; padding: 2px 8px;
+    border-radius: 3px; font-size: 12px; letter-spacing: 1px;
+  }
+  .proto-flow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .proto-flow b { color: #fff; font-weight: 600; }
+  .proto-flow a {
+    color: #aeb4ba; text-decoration: none; border: 1px dashed #5c626a;
+    padding: 2px 10px; border-radius: 12px; cursor: pointer;
+  }
+  .proto-flow a:hover, .proto-flow a.on { color: #fff; border-color: #fff; border-style: solid; }
+  .proto-flow .arrow { color: #6d737a; }
+  .proto-bar .spacer { flex: 1; }
+  .proto-bar button {
+    background: #3a4046; color: #e8eaec; border: 1px solid #5c626a;
+    padding: 4px 14px; border-radius: 4px; cursor: pointer; font-size: 12px;
+  }
+  .proto-bar button:hover { background: #4a5158; }
+
+  /* ============ 产品画布 ============ */
+  .stage { max-width: 1200px; margin: 20px auto; padding: 0 16px; }
+  .page { display: none; }
+  .page.on { display: block; }
+  .frame {
+    background: var(--paper); border: 1.5px solid var(--ink); border-radius: 6px;
+    overflow: hidden; box-shadow: 0 2px 0 rgba(0,0,0,.15);
+  }
+
+  /* 产品顶栏 */
+  .topbar {
+    display: flex; align-items: center; gap: 12px; padding: 10px 16px;
+    border-bottom: 1.5px solid var(--line);
+  }
+  .logo-ph {
+    width: 28px; height: 28px; border: 1.5px solid var(--ink); border-radius: 6px;
+    background: repeating-linear-gradient(45deg, var(--fill) 0 3px, var(--paper) 3px 6px);
+    display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--ink-2);
+  }
+  .topbar .title { font-size: 15px; font-weight: 700; }
+
+  /* 步骤导航（重点体现用户流程） */
+  .steps { display: flex; align-items: center; gap: 6px; padding: 12px 16px; border-bottom: 1px solid var(--line-soft); flex-wrap: wrap; }
+  .step { display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 14px; cursor: pointer; border: 1px dashed transparent; }
+  .step:hover { border-color: var(--line-soft); }
+  .step .n {
+    width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--ink-2); color: var(--ink-2);
+    display: flex; align-items: center; justify-content: center; font-size: 11px; background: var(--paper);
+  }
+  .step .t { color: var(--ink-2); }
+  .step.done .n { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .step.done .t { color: var(--accent); }
+  .step.cur { border: 1.5px solid var(--accent); }
+  .step.cur .n { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+  .step.cur .t { color: var(--ink); font-weight: 700; }
+  .step-line { width: 22px; height: 0; border-top: 1.5px dashed var(--line-soft); }
+
+  /* 主体布局：侧栏 + 内容 + AI 助手 */
+  .body { display: flex; min-height: 560px; }
+  .sidebar { width: 128px; border-right: 1px solid var(--line-soft); padding: 12px 8px; background: #fafafa; flex-shrink: 0; }
+  .side-item {
+    padding: 8px 10px; border-radius: 5px; color: var(--ink-2); margin-bottom: 4px;
+    cursor: pointer; display: flex; align-items: center; gap: 7px;
+  }
+  .side-item .ico { width: 13px; height: 13px; border: 1.2px solid currentColor; border-radius: 3px; flex-shrink: 0; }
+  .side-item:hover { background: var(--fill); }
+  .side-item.on { background: var(--accent-soft); color: var(--ink); font-weight: 700; outline: 1.5px solid var(--accent); outline-offset: -1.5px; }
+  .main { flex: 1; padding: 16px 18px; min-width: 0; }
+
+  /* AI 助手（固定组件） */
+  .assistant {
+    width: 250px; border-left: 1px solid var(--line-soft); display: flex; flex-direction: column; flex-shrink: 0; background: #fcfcfd;
+  }
+  .as-head { padding: 10px 12px; border-bottom: 1px solid var(--line-soft); display: flex; align-items: center; gap: 6px; font-weight: 700; }
+  .as-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+  .as-head .muted { font-weight: 400; font-size: 11px; color: var(--ink-2); margin-left: auto; }
+  .as-chips { padding: 8px 10px; border-bottom: 1px dashed var(--line-soft); display: flex; flex-wrap: wrap; gap: 5px; }
+  .chip-q { border: 1px solid var(--line-soft); background: var(--fill); border-radius: 12px; padding: 3px 9px; font-size: 11px; color: var(--ink-2); }
+  .as-msgs { flex: 1; padding: 10px; overflow: hidden; }
+  .bubble { border: 1px solid var(--line-soft); border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; font-size: 12px; line-height: 1.55; }
+  .bubble.ai { background: var(--fill); }
+  .bubble.user { background: var(--accent-soft); border-color: var(--accent); margin-left: 34px; }
+  .bubble b { font-weight: 700; }
+  .as-input { display: flex; gap: 6px; padding: 8px 10px; border-top: 1px solid var(--line-soft); }
+  .as-input .box { flex: 1; border: 1px solid var(--line-soft); border-radius: 5px; padding: 6px 8px; color: var(--ink-2); font-size: 12px; }
+  .as-input .send { border: 1.5px solid var(--ink); padding: 5px 12px; border-radius: 5px; font-size: 12px; background: var(--fill-2); }
+
+  /* 低保真通用元件 */
+  .card { border: 1.5px solid var(--line); border-radius: 6px; padding: 14px 16px; margin-bottom: 14px; background: var(--paper); }
+  .card h3 { font-size: 14px; margin-bottom: 4px; }
+  .card .sub { color: var(--ink-2); font-size: 12px; margin-bottom: 10px; }
+  .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .row.between { justify-content: space-between; }
+  .field { display: flex; gap: 8px; align-items: baseline; }
+  .field .k { color: var(--ink-2); width: 40px; flex-shrink: 0; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .btn {
+    display: inline-block; border: 1.5px solid var(--ink); border-radius: 5px; padding: 6px 14px;
+    background: var(--paper); font-size: 12.5px; cursor: pointer; color: var(--ink);
+  }
+  .btn.primary { background: var(--fill-2); box-shadow: inset 0 -2px 0 var(--line-soft); font-weight: 700; }
+  .btn.small { padding: 3px 9px; font-size: 11.5px; }
+  .btn.ghost { border: 1px dashed var(--line); color: var(--ink-2); }
+  .btn[disabled] { opacity: .45; cursor: not-allowed; }
+  .filebox { border: 1.2px solid var(--line); border-radius: 4px; padding: 5px 12px; color: var(--ink-2); background: var(--fill); }
+  .filename { color: var(--ink-2); }
+  .notice { border: 1.2px dashed var(--accent); background: var(--accent-soft); color: #14684a; border-radius: 5px; padding: 7px 12px; margin-top: 12px; font-size: 12px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag-i { border: 1px solid var(--line); background: var(--fill); border-radius: 12px; padding: 2px 10px; font-size: 11.5px; color: var(--ink); }
+  .bullets li { list-style: none; position: relative; padding-left: 14px; margin-bottom: 7px; line-height: 1.6; color: var(--ink); font-size: 12.5px; }
+  .bullets li::before { content: "•"; position: absolute; left: 2px; color: var(--ink-2); }
+  .textline { height: 10px; border-radius: 3px; background: var(--fill-2); margin-bottom: 8px; }
+  .textline.w60 { width: 60%; } .textline.w80 { width: 80%; } .textline.w40 { width: 40%; }
+  .img-ph {
+    border: 1.2px dashed var(--line); background: repeating-linear-gradient(45deg, transparent 0 8px, var(--fill) 8px 16px);
+    border-radius: 5px; display: flex; align-items: center; justify-content: center; color: var(--ink-2); font-size: 11px;
+  }
+  .link-edit { color: var(--ink-2); text-decoration: underline; cursor: pointer; font-size: 12px; }
+  .tabbar { display: flex; gap: 4px; border-bottom: 1.5px solid var(--line-soft); margin-bottom: 14px; }
+  .tab { padding: 7px 16px; color: var(--ink-2); cursor: pointer; border: 1.5px solid transparent; border-bottom: none; border-radius: 6px 6px 0 0; font-size: 12.5px; }
+  .tab.on { border-color: var(--line-soft); background: var(--paper); font-weight: 700; color: var(--ink); position: relative; top: 1.5px; }
+
+  /* 匹配分析页专用 */
+  .score-box { border: 1.5px solid var(--warn); background: var(--warn-soft); border-radius: 8px; padding: 10px 22px; text-align: center; }
+  .score-box .num { font-size: 30px; font-weight: 800; color: var(--ink); line-height: 1.1; }
+  .score-box .cap { font-size: 12px; color: var(--ink-2); }
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 11px; }
+  .bar-row .bl { width: 88px; color: var(--ink-2); flex-shrink: 0; font-size: 12.5px; }
+  .bar-row .track { flex: 1; height: 12px; border: 1px solid var(--line); border-radius: 7px; background: var(--paper); }
+  .bar-row .fillb { height: 100%; border-radius: 6px; background: repeating-linear-gradient(90deg, #c4c9cf 0 6px, #d8dce1 6px 12px); }
+  .bar-row .pv { width: 40px; text-align: right; font-weight: 700; font-size: 12.5px; }
+  .match-zone { border-radius: 6px; padding: 10px 12px; margin-top: 10px; }
+  .match-zone.ok { border: 1.2px solid var(--accent); background: var(--accent-soft); }
+  .match-zone.part { border: 1.2px solid var(--warn); background: var(--warn-soft); }
+  .match-zone.bad { border: 1.2px solid var(--danger); background: var(--danger-soft); }
+  .mz-head { font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .badge { border-radius: 10px; padding: 1px 9px; font-size: 11px; font-weight: 700; }
+  .badge.ok { background: var(--accent); color: #fff; }
+  .badge.part { background: var(--warn); color: #fff; }
+  .badge.bad { background: var(--danger); color: #fff; }
+  .badge.neutral { background: var(--fill-2); color: var(--ink-2); }
+  .badge.done { background: var(--accent-soft); color: #14684a; border: 1px solid var(--accent); }
+  .part-item { background: var(--paper); border: 1px solid var(--line-soft); border-radius: 6px; padding: 9px 12px; margin-bottom: 8px; }
+  .part-item .name { font-weight: 700; margin-bottom: 3px; }
+  .part-item .why { color: var(--ink-2); font-size: 12px; line-height: 1.55; margin-bottom: 6px; }
+
+  /* 优化建议页专用 */
+  .stats-bar { border: 1.5px solid var(--line); border-radius: 6px; background: var(--fill); padding: 9px 14px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+  .stats-bar b { font-weight: 700; }
+  .sug-card { border: 1.5px solid var(--line); border-radius: 6px; margin-bottom: 14px; overflow: hidden; }
+  .sug-head { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-bottom: 1px dashed var(--line-soft); background: #fafafa; }
+  .sug-head .no { font-weight: 700; }
+  .diff-before { border: 1px dashed var(--line); background: #f6f7f8; border-radius: 5px; padding: 9px 12px; color: var(--ink-2); margin-bottom: 9px; line-height: 1.6; font-size: 12.5px; }
+  .diff-after { border: 1.2px solid var(--accent); background: var(--accent-soft); border-radius: 5px; padding: 9px 12px; margin-bottom: 9px; line-height: 1.6; font-size: 12.5px; }
+  .diff-label { font-size: 11px; font-weight: 700; color: var(--ink-2); margin-bottom: 4px; letter-spacing: 1px; }
+  .diff-after .diff-label { color: #14684a; }
+  .problem-line { margin-bottom: 10px; line-height: 1.55; }
+  .problem-line b { color: var(--danger); }
+  .sug-actions { display: flex; gap: 8px; padding: 0 14px 12px; }
+
+  /* 标注体系 */
+  .anno { display: inline-flex; width: 16px; height: 16px; border-radius: 50%; background: #f7d354; border: 1px solid #b89a12; color: #4a3c00; font-size: 10.5px; font-weight: 700; align-items: center; justify-content: center; vertical-align: middle; margin: 0 2px; }
+  .notes { border: 1.5px dashed #b89a12; background: var(--note); border-radius: 6px; padding: 12px 16px; margin-top: 16px; }
+  .notes h4 { font-size: 12.5px; margin-bottom: 8px; color: #6a5600; letter-spacing: 1px; }
+  .notes li { list-style: none; margin-bottom: 6px; line-height: 1.6; color: #554800; font-size: 12px; padding-left: 20px; position: relative; }
+  .notes li .anno { position: absolute; left: 0; top: 2px; }
+  .page-meta { display: flex; justify-content: space-between; align-items: center; color: var(--ink-2); font-size: 12px; margin-bottom: 8px; flex-wrap: wrap; gap: 8px; }
+  .flow-pos { border: 1px dashed var(--line); border-radius: 12px; padding: 2px 12px; }
+  .flow-pos b { color: var(--ink); }
+
+  /* 状态流转小图（建议页标注内） */
+  .flow-diagram { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 8px; font-size: 11.5px; }
+  .fd-node { border: 1px solid #b89a12; background: #fff; border-radius: 4px; padding: 2px 8px; }
+  .fd-arrow { color: #6a5600; }
+</style>
+</head>
+<body>
+
+<!-- ================= 原型工具栏（评审用，非产品 UI） ================= -->
+<div class="proto-bar">
+  <span class="tag">低保真原型</span>
+  <div class="proto-flow">
+    <b>用户流程：</b>
+    <a data-go="p1">① 上传简历</a><span class="arrow">+</span>
+    <a data-go="p2">② 上传JD</a>
+    <span class="arrow">→</span>
+    <a data-go="p3">③ AI 分析</a>
+    <span class="arrow">→</span>
+    <a data-go="p4">④ 获取建议</a>
+    <span class="arrow">→</span>
+    <a data-go="p5">⑤ 生成优化简历</a>
+  </div>
+  <span class="spacer"></span>
+  <button onclick="step(-1)">← 上一步</button>
+  <button onclick="step(1)">下一步 →</button>
+</div>
+
+<div class="stage">
+
+<!-- ============================================================ -->
+<!-- 页面 1：上传简历 -->
+<!-- ============================================================ -->
+<section class="page on" id="p1">
+  <div class="page-meta">
+    <span>页面 1 / 5 · <b>上传简历</b> · 对应截图：上传简历页</span>
+    <span class="flow-pos">流程位置：<b>上传资料</b>（第 1 步）</span>
+  </div>
+  <div class="frame">
+    <div class="topbar">
+      <div class="logo-ph">Logo</div>
+      <div class="title">AI 求职工作台</div>
+    </div>
+    <div class="steps">
+      <div class="step cur"><span class="n">1</span><span class="t">上传简历</span></div><span class="step-line"></span>
+      <div class="step" onclick="go('p2')"><span class="n">2</span><span class="t">输入岗位JD</span></div><span class="step-line"></span>
+      <div class="step" onclick="go('p3')"><span class="n">3</span><span class="t">匹配分析</span></div><span class="step-line"></span>
+      <div class="step" onclick="go('p4')"><span class="n">4</span><span class="t">优化建议</span></div><span class="step-line"></span>
+      <div class="step" onclick="go('p5')"><span class="n">5</span><span class="t">优化后简历</span></div>
+    </div>
+    <div class="body">
+      <div class="sidebar">
+        <div class="side-item on"><span class="ico"></span>上传简历</div>
+        <div class="side-item" onclick="go('p2')"><span class="ico"></span>上传 JD</div>
+        <div class="side-item" onclick="go('p3')"><span class="ico"></span>匹配分析</div>
+        <div class="side-item" onclick="go('p4')"><span class="ico"></span>优化建议</div>
+        <div class="side-item" onclick="go('p5')"><span class="ico"></span>优化后简历</div>
+      </div>
+      <div class="main">
+        <div class="card">
+          <h3>上传简历 <span class="anno">1</span></h3>
+          <div class="sub">支持文档 PDF 格式</div>
+          <div class="row">
+            <span class="filebox">选择文件</span>
+            <span class="filename">王小明-软件测试工程师-简历.pdf</span>
+            <span class="btn primary">上传并解析</span>
+          </div>
+          <div class="notice">✓ 简历解析成功，已提取关键信息用于匹配分析 <span class="anno">2</span></div>
+        </div>
+        <div class="card">
+          <div class="row between">
+            <h3>简历信息</h3>
+            <span class="link-edit">重新上传 <span class="anno">3</span></span>
+          </div>
+          <div class="grid3">
+            <div class="field"><span class="k">姓名</span><b>王小明</b></div>
+            <div class="field"><span class="k">学校</span><b>武汉科技大学</b></div>
+            <div class="field"><span class="k">专业</span><b>网络工程 本科</b></div>
+          </div>
+          <div class="sub" style="margin-bottom:6px">技能</div>
+          <div class="tags" style="margin-bottom:12px">
+            <span class="tag-i">功能测试</span><span class="tag-i">测试用例设计</span><span class="tag-i">SQL</span>
+            <span class="tag-i">MySQL</span><span class="tag-i">Java</span><span class="tag-i">Spring Boot</span>
+            <span class="tag-i">Postman</span><span class="tag-i">Git</span><span class="tag-i">Linux</span>
+            <span class="tag-i">SQL注入原理</span><span class="tag-i">Web安全基础</span>
+          </div>
+          <div class="sub" style="margin-bottom:6px">项目经历 <span class="anno">4</span></div>
+          <ul class="bullets">
+            <li>2026.05 – 2026.06 企业级差旅报销系统（后端开发/测试）：负责报销申请、审批流等模块开发与功能验证；使用 MySQL 进行数据校验与结果验证；对日期校验、重复提交等边界场景执行测试。</li>
+            <li>2026.04 Web 安全测试实验（课程实验）：SQL 注入实验，了解漏洞原理及常见防御方案，完成实验报告撰写。</li>
+          </ul>
+        </div>
+      </div>
+      <div class="assistant">
+        <div class="as-head"><span class="as-dot"></span>AI 助手<span class="muted">已就绪 &gt;&gt;</span></div>
+        <div class="as-chips">
+          <span class="chip-q">我的简历最需要改哪三处?</span>
+          <span class="chip-q">为什么只有82%匹配?</span>
+          <span class="chip-q">帮我修改这个项目经历</span>
+          <span class="chip-q">这个岗位面试可能问什么?</span>
+          <span class="chip-q">刚才修改了什么?</span>
+        </div>
+        <div class="as-msgs">
+          <div class="bubble ai">你好！我是你的 AI 求职顾问。可以帮你优化简历、准备面试、分析岗位匹配度。</div>
+          <div class="bubble user">我的简历最需要改哪三处?</div>
+          <div class="bubble ai">基于你的简历、目标岗位 JD（特别是项目时间逻辑错误（致命）…<br>1. <b>修正项目时间逻辑错误</b>…</div>
+        </div>
+        <div class="as-input"><span class="box">有问题随时问我…</span><span class="send">发送</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="notes">
+    <h4>本页交互说明（对应开发逻辑）</h4>
+    <li><span class="anno">1</span>点击「上传并解析」→ 按钮变为「解析中…」并禁用（防止重复提交），完成后恢复。</li>
+    <li><span class="anno">2</span>解析成功后展示结构化简历信息（姓名/学校/技能/项目经历），作为后续匹配分析的输入。</li>
+    <li><span class="anno">3</span>「重新上传」会清空当前简历数据，工作区回到空状态（会话级保存，刷新不丢失）。</li>
+    <li><span class="anno">4</span>项目经历保留原文事实细节，仅做结构化整理，不做删减。</li>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 页面 2：上传JD -->
+<!-- ============================================================ -->
+<section class="page" id="p2">
+  <div class="page-meta">
+    <span>页面 2 / 5 · <b>上传 JD</b> · 对应截图：上传 JD 页</span>
+    <span class="flow-pos">流程位置：<b>上传资料</b>（第 2 步）</span>
+  </div>
+  <div class="frame">
+    <div class="topbar">
+      <div class="logo-ph">Logo</div>
+      <div class="title">AI 求职工作台</div>
+    </div>
+    <div class="steps">
+      <div class="step done" onclick="go('p1')"><span class="n">✓</span><span class="t">上传简历</span></div><span class="step-line"></span>
+      <div class="step cur"><span class="n">2</span><span class="t">输入岗位JD</span></div><span class="step-line"></span>
+      <div class="step" onclick="go('p3')"><span class="n">3</span><span class="t">匹配分析</span></div><span class="step-line"></span>
+      <div class="step" onclick="go('p4')"><span class="n">4</span><span class="t">优化建议</span></div><span class="step-line"></span>
+      <div class="step" onclick="go('p5')"><span class="n">5</span><span class="t">优化后简历</span></div>
+    </div>
+    <div class="body">
+      <div class="sidebar">
+        <div class="side-item" onclick="go('p1')"><span class="ico"></span>上传简历</div>
+        <div class="side-item on"><span class="ico"></span>上传 JD</div>
+        <div class="side-item" onclick="go('p3')"><span class="ico"></span>匹配分析</div>
+        <div class="side-item" onclick="go('p4')"><span class="ico"></span>优化建议</div>
+        <div class="side-item" onclick="go('p5')"><span class="ico"></span>优化后简历</div>
+      </div>
+      <div class="main">
+        <div class="card">
+          <h3>招聘 JD <span class="anno">1</span></h3>
+          <div class="sub">粘贴目标岗位的职位描述文本</div>
+          <div style="border:1.2px solid var(--line); border-radius:5px; padding:12px 14px; background:#fcfcfd; line-height:1.7; color:var(--ink); font-size:12.5px; max-height:220px; overflow:hidden;">
+            岗位职责：<br>
+            1、负责业务中台、煤泵系统、经销商系统及国内外商城的功能测试；<br>
+            2、参与需求评审、测试点梳理、用例设计执行、缺陷闭环、回归验证及测试报告输出；<br>
+            3、参与系统链路、接口、权限、数据一致性和基础性能等专项测试，沉淀测试平台用例或简单自动化脚本；<br>
+            4、参与测试平台的功能开发与测试。<br><br>
+            任职要求：<br>
+            1、2027届本科及以上，计算机科学与技术、软件工程等相关专业；<br>
+            2、掌握测试基本理论和用例设计方法；<br>
+            3、具备 SQL、接口测试工具或脚本基础；<br>
+            4、能清晰表达并规范输出测试记录和报告。
+          </div>
+          <div class="row" style="justify-content:flex-end; margin-top:12px">
+            <span class="btn primary">开始分析 <span class="anno">2</span></span>
+          </div>
+        </div>
+        <div class="card">
+          <h3>分析结果 <span class="anno">3</span></h3>
+          <div class="sub">AI 提取的岗位结构化信息</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+            <div>
+              <div class="diff-label">岗位名称</div>
+              <div class="textline w60"></div>
+              <div class="diff-label" style="margin-top:8px">岗位职责</div>
+              <div class="textline"></div><div class="textline w80"></div><div class="textline w80"></div>
+            </div>
+            <div>
+              <div class="diff-label">技能要求</div>
+              <div class="textline"></div><div class="textline w60"></div>
+              <div class="diff-label" style="margin-top:8px">硬性要求</div>
+              <div class="textline w80"></div><div class="textline w40"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="assistant">
+        <div class="as-head"><span class="as-dot"></span>AI 助手<span class="muted">已就绪 &gt;&gt;</span></div>
+        <div class="as-chips">
+          <span class="chip-q">这个岗位面试可能问什么?</span>
+          <span class="chip-q">这个JD最看重什么能力?</span>
+          <span class="chip-q">我和这个岗位差距在哪?</span>
+        </div>
+        <div class="as-msgs">
+          <div class="bubble ai">JD 分析完成后，可以基于岗位要求对比你的简历，给出针对性优化建议。</div>
+        </div>
+        <div class="as-input"><span class="box">有问题随时问我…</span><span class="send">发送</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="notes">
+    <h4>本页交互说明</h4>
+    <li><span class="anno">1</span>JD 以文本粘贴为主，内容可编辑；前置条件：已上传简历（第 1 步完成）。</li>
+    <li><span class="anno">2</span>点击「开始分析」→「分析中…」loading，按钮禁用；分析仅基于 JD 原文，不虚构信息。</li>
+    <li><span class="anno">3</span>分析结果为结构化岗位画像（岗位名称/职责/技能要求/硬性要求），完成后解锁第 3 步「匹配分析」。</li>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 页面 3：匹配分析 -->
+<!-- ============================================================ -->
+<section class="page" id="p3">
+  <div class="page-meta">
+    <span>页面 3 / 5 · <b>匹配分析</b> · 对应截图：岗位匹配分析页</span>
+    <span class="flow-pos">流程位置：<b>AI 分析</b></span>
+  </div>
+  <div class="frame">
+    <div class="topbar">
+      <div class="logo-ph">Logo</div>
+      <div class="title">AI 求职工作台</div>
+    </div>
+    <div class="steps">
+      <div class="step done" onclick="go('p1')"><span class="n">✓</span><span class="t">上传简历</span></div><span class="step-line"></span>
+      <div class="step done" onclick="go('p2')"><span class="n">✓</span><span class="t">输入岗位JD</span></div><span class="step-line"></span>
+      <div class="step cur"><span class="n">3</span><span class="t">匹配分析</span></div><span class="step-line"></span>
+      <div class="step" onclick="go('p4')"><span class="n">4</span><span class="t">优化建议</span></div><span class="step-line"></span>
+      <div class="step" onclick="go('p5')"><span class="n">5</span><span class="t">优化后简历</span></div>
+    </div>
+    <div class="body">
+      <div class="sidebar">
+        <div class="side-item" onclick="go('p1')"><span class="ico"></span>上传简历</div>
+        <div class="side-item" onclick="go('p2')"><span class="ico"></span>上传 JD</div>
+        <div class="side-item on"><span class="ico"></span>匹配分析</div>
+        <div class="side-item" onclick="go('p4')"><span class="ico"></span>优化建议</div>
+        <div class="side-item" onclick="go('p5')"><span class="ico"></span>优化后简历</div>
+      </div>
+      <div class="main">
+        <div class="card">
+          <div class="row between">
+            <div>
+              <h3>岗位匹配分析</h3>
+              <div class="sub">目标岗位：软件测试工程师</div>
+            </div>
+            <div class="score-box"><div class="num">82%</div><div class="cap">基本匹配</div></div>
+          </div>
+          <div style="line-height:1.6; color:var(--ink); font-size:12.5px; margin-bottom:6px">
+            <span class="anno">1</span> 整体匹配较好，主要差距集中在<b>接口测试经验</b>和<b>相关项目描述</b>，针对这些内容优化简历后可以进一步提高岗位匹配度。
+          </div>
+        </div>
+        <div class="card">
+          <h3>四维匹配拆解 <span class="anno">2</span></h3>
+          <div style="margin-top:10px">
+            <div class="bar-row"><span class="bl">技能匹配</span><div class="track"><div class="fillb" style="width:85%"></div></div><span class="pv">85%</span></div>
+            <div class="bar-row"><span class="bl">项目匹配</span><div class="track"><div class="fillb" style="width:75%"></div></div><span class="pv">75%</span></div>
+            <div class="bar-row"><span class="bl">经验匹配</span><div class="track"><div class="fillb" style="width:80%"></div></div><span class="pv">80%</span></div>
+            <div class="bar-row"><span class="bl">岗位要求覆盖</span><div class="track"><div class="fillb" style="width:85%"></div></div><span class="pv">85%</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>技能匹配情况</h3>
+          <div class="match-zone ok">
+            <div class="mz-head">已匹配 <span class="badge ok">8</span></div>
+            <div class="tags">
+              <span class="tag-i">功能测试</span><span class="tag-i">测试用例设计</span><span class="tag-i">SQL</span>
+              <span class="tag-i">Postman</span><span class="tag-i">Git</span><span class="tag-i">Linux</span>
+              <span class="tag-i">Java</span><span class="tag-i">Spring Boot</span>
+            </div>
+          </div>
+          <div class="match-zone part">
+            <div class="mz-head">部分匹配 <span class="badge part">3</span> <span class="anno">3</span></div>
+            <div class="part-item">
+              <div class="name">接口测试</div>
+              <div class="why">简历中提到了 Postman 和接口测试基础，但未明确描述接口测试的具体方法和覆盖场景，描述简单。</div>
+              <span class="btn small">发给 AI 助手优化</span> <span class="anno">4</span>
+            </div>
+            <div class="part-item">
+              <div class="name">自动化测试/测试平台开发</div>
+              <div class="why">JD 要求沉淀测试平台用例或简单自动化脚本，简历仅有课程实验经历，未体现测试平台相关开发经验。</div>
+              <span class="btn small">发给 AI 助手优化</span>
+            </div>
+            <div class="part-item">
+              <div class="name">缺陷跟踪与报告输出</div>
+              <div class="why">简历中提到了输出测试报告，但未明确描述缺陷管理流程（如 Bug 生命周期）和报告输出能力。</div>
+              <span class="btn small">发给 AI 助手优化</span>
+            </div>
+          </div>
+          <div class="match-zone bad">
+            <div class="mz-head">不匹配 <span class="badge bad">3</span> <span class="anno">5</span></div>
+            <div class="tags">
+              <span class="tag-i">性能测试基础</span><span class="tag-i">Jira/禅道 等管理工具</span><span class="tag-i">测试平台开发经验</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="notes">
+    <h4>本页交互说明</h4>
+    <li><span class="anno">1</span>匹配度大数字为页面最突出信息，配一句话总结；分数与总结来自 AI 匹配分析结果。</li>
+    <li><span class="anno">2</span>四维分数条与百分比数字对齐展示（技能/项目/经验/岗位要求覆盖）。</li>
+    <li><span class="anno">3</span>技能匹配分三档展示：已匹配（绿色）/ 部分匹配（黄色）/ 不匹配（红色），部分匹配逐条分块。</li>
+    <li><span class="anno">4</span>每条部分匹配附「发给 AI 助手优化」按钮，点击后右侧 AI 助手自动展开并携带该条内容提问（复用已有发送机制）。</li>
+    <li><span class="anno">5</span>不匹配项仅展示标签，不提供优化入口（简历中无对应素材，不虚构）。</li>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 页面 4：优化建议 -->
+<!-- ============================================================ -->
+<section class="page" id="p4">
+  <div class="page-meta">
+    <span>页面 4 / 5 · <b>优化建议</b> · 对应截图：AI 优化建议页</span>
+    <span class="flow-pos">流程位置：<b>获取建议</b>（用户逐条确认）</span>
+  </div>
+  <div class="frame">
+    <div class="topbar">
+      <div class="logo-ph">Logo</div>
+      <div class="title">AI 求职工作台</div>
+    </div>
+    <div class="steps">
+      <div class="step done" onclick="go('p1')"><span class="n">✓</span><span class="t">上传简历</span></div><span class="step-line"></span>
+      <div class="step done" onclick="go('p2')"><span class="n">✓</span><span class="t">输入岗位JD</span></div><span class="step-line"></span>
+      <div class="step done" onclick="go('p3')"><span class="n">✓</span><span class="t">匹配分析</span></div><span class="step-line"></span>
+      <div class="step cur"><span class="n">4</span><span class="t">优化建议</span></div><span class="step-line"></span>
+      <div class="step" onclick="go('p5')"><span class="n">5</span><span class="t">优化后简历</span></div>
+    </div>
+    <div class="body">
+      <div class="sidebar">
+        <div class="side-item" onclick="go('p1')"><span class="ico"></span>上传简历</div>
+        <div class="side-item" onclick="go('p2')"><span class="ico"></span>上传 JD</div>
+        <div class="side-item" onclick="go('p3')"><span class="ico"></span>匹配分析</div>
+        <div class="side-item on"><span class="ico"></span>优化建议</div>
+        <div class="side-item" onclick="go('p5')"><span class="ico"></span>优化后简历</div>
+      </div>
+      <div class="main">
+        <h3 style="margin-bottom:4px">AI 优化建议 <span class="anno">1</span></h3>
+        <div class="sub" style="margin-bottom:12px">AI 只提出建议，不会直接修改简历。逐条确认后才会写入「优化后简历」。</div>
+        <div class="stats-bar">
+          <span>AI 发现 <b>4</b> 项可优化内容</span>
+          <span>已接受 <b>3</b> 项</span>
+          <span>已保留 <b>1</b> 项</span>
+          <span>待确认 <b>0</b> 项</span>
+          <span style="flex:1"></span>
+          <span class="btn small">全部接受 <span class="anno">5</span></span>
+          <span class="btn small">全部保留 <span class="anno">5</span></span>
+        </div>
+
+        <!-- 建议 #1：已接受 -->
+        <div class="sug-card">
+          <div class="sug-head">
+            <span class="no">#1</span><span class="tag-i">技能标签</span><span class="badge neutral">修改</span>
+            <span style="flex:1"></span>
+            <span class="badge done">✓ 已接受</span> <span class="anno">2</span>
+          </div>
+          <div style="padding:12px 14px">
+            <div class="problem-line"><b>问题：</b>项目时间逻辑描述缺乏量化与深度</div>
+            <div class="diff-before">
+              <div class="diff-label">修改前（原文摘录）</div>
+              2026.05-2026.06 企业级差旅报销系统后端开发/测试，负责报销申请、审批流等模块开发与功能验证。编写测试用例，验证核心业务逻辑正确性。使用 MySQL 进行数据校验与结果验证。回归测试，通过提交历史版本数据进行对比。
+            </div>
+            <div class="diff-after">
+              <div class="diff-label">修改后（AI 建议）</div>
+              2026.05-2026.06 企业级差旅报销系统后端开发/测试，负责报销申请、审批流等模块开发与功能验证，累计编写测试用例 50+，覆盖核心业务流程；运用等价类、边界值分析方法设计用例，重点测试金额校验、重复提交等异常场景，发现并修复逻辑缺陷 3 处；使用 MySQL 进行数据一致性校验，确保前后端数据同步准确。
+            </div>
+          </div>
+        </div>
+
+        <!-- 建议 #2：已保留原文 -->
+        <div class="sug-card">
+          <div class="sug-head">
+            <span class="no">#2</span><span class="tag-i">技能</span><span class="badge neutral">修改</span>
+            <span style="flex:1"></span>
+            <span class="badge neutral">已保留原文</span> <span class="anno">3</span>
+          </div>
+          <div style="padding:12px 14px">
+            <div class="problem-line"><b>问题：</b>接口测试技能覆盖面描述不够专业</div>
+            <div class="diff-before">
+              <div class="diff-label">修改前（原文摘录）</div>
+              工具：Postman（接口测试基础级）、Git、Linux
+            </div>
+            <div class="diff-after">
+              <div class="diff-label">修改后（AI 建议）</div>
+              熟练使用 Postman 进行接口测试，理解请求/响应校验与断言方法；熟悉 Git 分支管理与 Linux 常用命令。
+            </div>
+          </div>
+        </div>
+
+        <!-- 待确认态示例（标注用） -->
+        <div class="sug-card" style="border-style:dashed">
+          <div class="sug-head">
+            <span class="no">#4</span><span class="tag-i">项目经历</span><span class="badge neutral">强化</span>
+            <span style="flex:1"></span>
+            <span class="badge part">待确认</span> <span class="anno">4</span>
+          </div>
+          <div style="padding:12px 14px">
+            <div class="problem-line"><b>问题：</b>项目描述未突出测试工作的深度与产出</div>
+            <div class="diff-before">
+              <div class="diff-label">修改前（原文摘录）</div>
+              参与差旅报销系统测试，编写测试用例，执行回归测试。
+            </div>
+            <div class="diff-after">
+              <div class="diff-label">修改后（AI 建议）</div>
+              主导差旅报销系统核心模块测试，设计并执行测试用例 50+，回归测试覆盖全部缺陷修复，输出规范测试报告。
+            </div>
+          </div>
+          <div class="sug-actions">
+            <span class="btn small primary">接受修改</span>
+            <span class="btn small">编辑</span>
+            <span class="btn small">保留原文</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="notes">
+    <h4>本页交互说明</h4>
+    <li><span class="anno">1</span>建议由 AI 匹配分析生成，每条包含：所属模块 / 类型（修改·强化·新增）/ 问题 / 修改前 / 修改后 / 修改原因。</li>
+    <li><span class="anno">2</span>已接受：AI 建议内容已写入「优化后简历」；徽章绿色。</li>
+    <li><span class="anno">3</span>已保留原文：用户选择不采纳，简历保持原内容；AI 重新生成建议不会覆盖已确认结果。</li>
+    <li><span class="anno">4</span>待确认态提供三个操作：<b>接受修改</b>（写入建议内容）/ <b>编辑</b>（手动修改 AI 建议后确认写入）/ <b>保留原文</b>（不改动）。</li>
+    <li><span class="anno">5</span>「全部接受」「全部保留」点击后需二次确认弹窗，仅作用于待确认项；逐条确认始终保留。</li>
+    <div class="flow-diagram">
+      <b style="margin-right:4px">状态流转：</b>
+      <span class="fd-node">待确认 pending</span><span class="fd-arrow">→ 接受修改 →</span><span class="fd-node">已接受 accepted</span>
+      <span class="fd-arrow">／</span>
+      <span class="fd-node">待确认 pending</span><span class="fd-arrow">→ 编辑确认 →</span><span class="fd-node">已编辑 edited</span>
+      <span class="fd-arrow">／</span>
+      <span class="fd-node">待确认 pending</span><span class="fd-arrow">→ 保留原文 →</span><span class="fd-node">已保留 kept</span>
+      <span class="fd-arrow">→ 全部确认后，第 4 步完成，解锁第 5 步</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 页面 5：优化后简历 -->
+<!-- ============================================================ -->
+<section class="page" id="p5">
+  <div class="page-meta">
+    <span>页面 5 / 5 · <b>优化后简历</b> · 对应截图：我的优化后简历页</span>
+    <span class="flow-pos">流程位置：<b>生成优化简历</b>（最终产出）</span>
+  </div>
+  <div class="frame">
+    <div class="topbar">
+      <div class="logo-ph">Logo</div>
+      <div class="title">AI 求职工作台</div>
+    </div>
+    <div class="steps">
+      <div class="step done" onclick="go('p1')"><span class="n">✓</span><span class="t">上传简历</span></div><span class="step-line"></span>
+      <div class="step done" onclick="go('p2')"><span class="n">✓</span><span class="t">输入岗位JD</span></div><span class="step-line"></span>
+      <div class="step done" onclick="go('p3')"><span class="n">✓</span><span class="t">匹配分析</span></div><span class="step-line"></span>
+      <div class="step done" onclick="go('p4')"><span class="n">✓</span><span class="t">优化建议</span></div><span class="step-line"></span>
+      <div class="step cur"><span class="n">5</span><span class="t">优化后简历</span></div>
+    </div>
+    <div class="body">
+      <div class="sidebar">
+        <div class="side-item" onclick="go('p1')"><span class="ico"></span>上传简历</div>
+        <div class="side-item" onclick="go('p2')"><span class="ico"></span>上传 JD</div>
+        <div class="side-item" onclick="go('p3')"><span class="ico"></span>匹配分析</div>
+        <div class="side-item" onclick="go('p4')"><span class="ico"></span>优化建议</div>
+        <div class="side-item on"><span class="ico"></span>优化后简历</div>
+      </div>
+      <div class="main">
+        <div class="row between" style="margin-bottom:6px">
+          <div>
+            <h3>我的优化后简历 <span class="anno">1</span></h3>
+            <div class="sub">基于 AI 建议逐条编辑和确认后的真实可编辑简历</div>
+          </div>
+          <div class="row">
+            <span class="btn small">查看修改记录 <span class="anno">4</span></span>
+            <span class="btn small">下载原始简历 <span class="anno">5</span></span>
+            <span class="btn small primary">下载 AI 优化版 PDF <span class="anno">3</span></span>
+          </div>
+        </div>
+        <div class="tabbar">
+          <span class="tab">原始简历</span>
+          <span class="tab on">优化后简历</span>
+          <span class="tab">PDF 预览</span>
+          <span class="tab">修改记录</span>
+        </div>
+        <div class="card"><div class="row between"><b>姓名</b><span class="link-edit">编辑</span></div><div style="margin-top:6px">王小明</div></div>
+        <div class="card"><div class="row between"><b>联系方式</b><span class="link-edit">编辑</span></div><div style="margin-top:6px">电话：12345678910　邮箱：22222@qq.com</div></div>
+        <div class="card"><div class="row between"><b>求职意向</b><span class="link-edit">编辑</span></div><div style="margin-top:6px">软件测试工程师（实习）（武汉）</div></div>
+        <div class="card"><div class="row between"><b>教育经历</b><span class="link-edit">编辑</span></div><div style="margin-top:6px">2023.09 至今 武汉科技大学　网络工程 本科</div></div>
+        <div class="card">
+          <div class="row between"><b>技能</b><span class="link-edit">编辑</span></div>
+          <div class="tags" style="margin-top:8px">
+            <span class="tag-i">功能测试</span><span class="tag-i">测试用例设计</span><span class="tag-i">SQL</span>
+            <span class="tag-i">MySQL</span><span class="tag-i">Java</span><span class="tag-i">Spring Boot</span>
+            <span class="tag-i">Postman</span><span class="tag-i">Git</span><span class="tag-i">Linux</span>
+          </div>
+          <div class="tags" style="margin-top:6px">
+            <span class="tag-i">测试技能：熟练除除性命测试、了解等价类/边界值等用例设计方法</span>
+            <span class="tag-i">数据库：熟练使用 MySQL，了解索引与事务</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="row between"><b>项目经历</b><span class="link-edit">编辑</span></div>
+          <ul class="bullets" style="margin-top:8px">
+            <li>2026.05 – 2026.06 企业级差旅报销系统（后端开发/测试）：负责报销申请、审批流等模块开发与功能验证，累计编写测试用例 50+，覆盖核心业务流程；运用等价类、边界值分析方法设计用例，重点测试金额校验、重复提交等异常场景，发现并修复逻辑缺陷 3 处；使用 MySQL 进行数据一致性校验，确保前后端数据同步准确。</li>
+            <li>2026.04 Web 安全测试实验（课程实验）：SQL 注入实验，了解漏洞原理及常见防御方案，完成实验报告撰写。</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="notes">
+    <h4>本页交互说明</h4>
+    <li><span class="anno">1</span>内容来源严格受限：原始简历 + 用户接受的 AI 修改 + 用户手动编辑确认的内容；AI 重新生成建议不会自动改动本页。</li>
+    <li><span class="anno">2</span>四个标签页切换：原始简历 / 优化后简历 / PDF 预览 / 修改记录。</li>
+    <li><span class="anno">3</span>PDF 预览与下载实时读取本页最新确认数据（系统模板排版，A4 中文）。</li>
+    <li><span class="anno">4</span>修改记录展示「原始 → 最终」对比，并标注来源：AI 修改 / 用户编辑 / 用户保留。</li>
+    <li><span class="anno">5</span>原始简历始终保留可下载，原始文件不被修改；优化版使用系统模板生成。</li>
+  </div>
+</section>
+
+</div>
+
+<script>
+  const ORDER = ['p1','p2','p3','p4','p5'];
+  function go(id){
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+    document.getElementById(id).classList.add('on');
+    document.querySelectorAll('.proto-flow a').forEach(a=>a.classList.toggle('on', a.dataset.go===id));
+    window.scrollTo({top:0});
+  }
+  function step(d){
+    const cur = ORDER.indexOf(document.querySelector('.page.on').id);
+    const next = Math.min(ORDER.length-1, Math.max(0, cur+d));
+    go(ORDER[next]);
+  }
+  document.querySelectorAll('[data-go]').forEach(el=>el.addEventListener('click',()=>go(el.dataset.go)));
+</script>
+</body>
+</html>
