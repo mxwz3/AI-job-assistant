@@ -110,4 +110,54 @@ function handleClick(section) {
   width: 24px;
   text-align: center;
 }
+
+/* 移动端：侧边栏转为顶部导航，菜单可横向滑动 */
+@media (max-width: 767px) {
+  .sidebar {
+    width: 100%;
+    min-width: 100%;
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+    overflow: visible;
+  }
+
+  .logo {
+    padding: 10px 12px 10px 14px;
+    border-bottom: none;
+    flex-shrink: 0;
+  }
+
+  .logo-icon {
+    font-size: 18px;
+  }
+
+  .logo-text {
+    font-size: 15px;
+  }
+
+  .menu {
+    flex-direction: row;
+    flex: 1;
+    min-width: 0;
+    padding: 8px 10px 8px 4px;
+    gap: 2px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .menu-item {
+    flex-shrink: 0;
+    gap: 6px;
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
+  .menu-icon {
+    font-size: 15px;
+    width: auto;
+  }
+}
 </style>

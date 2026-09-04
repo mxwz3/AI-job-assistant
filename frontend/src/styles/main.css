@@ -14,6 +14,12 @@ body {
   min-height: 100vh;
 }
 
+/* 防止移动端意外横向滚动 */
+html,
+body {
+  overflow-x: hidden;
+}
+
 .app {
   max-width: 960px;
   margin: 0 auto;

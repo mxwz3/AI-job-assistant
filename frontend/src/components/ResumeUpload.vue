@@ -46,7 +46,16 @@ async function handleUpload() {
 <template>
   <section class="resume-upload">
     <h2>上传简历</h2>
-    <p class="hint">仅支持 PDF 格式</p>
+
+    <div class="usage-tips">
+      <p class="tips-title">使用说明</p>
+      <ul>
+        <li>支持 PDF 格式简历</li>
+        <li>建议简历控制在 1-3 页以内</li>
+        <li>建议文本内容不超过 6000 字</li>
+        <li>过长简历可能影响 AI 分析效果</li>
+      </ul>
+    </div>
 
     <div class="file-row">
       <input
@@ -89,10 +98,29 @@ h2 {
   color: #1f2937;
 }
 
-.hint {
+.usage-tips {
   margin: 0 0 16px;
-  color: #6b7280;
-  font-size: 14px;
+  padding: 10px 14px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  color: #1e40af;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.usage-tips .tips-title {
+  margin: 0 0 2px;
+  font-weight: 600;
+}
+
+.usage-tips ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.usage-tips li {
+  margin-bottom: 2px;
 }
 
 .file-row {
@@ -131,5 +159,25 @@ h2 {
   margin-top: 16px;
   color: #10b981;
   font-size: 14px;
+}
+
+/* 移动端：上传区改为纵向堆叠，按钮占满整行便于点击 */
+@media (max-width: 767px) {
+  .resume-upload {
+    padding: 16px;
+  }
+
+  .file-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .file-input {
+    min-width: 0;
+  }
+
+  .upload-btn {
+    width: 100%;
+  }
 }
 </style>

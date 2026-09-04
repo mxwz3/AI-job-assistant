@@ -582,4 +582,52 @@ function adjustHeight(event) {
   font-size: 15px;
   color: #111827;
 }
+
+/* 移动端：AI 助手变为全屏浮层（覆盖拖拽宽度的内联样式），收起时为右缘悬浮按钮 */
+@media (max-width: 767px) {
+  .chat-assistant {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100vh;
+    height: 100dvh;
+    z-index: 50;
+    border-left: none;
+    box-shadow: -2px 0 16px rgba(0, 0, 0, 0.15);
+  }
+
+  .chat-assistant.collapsed {
+    left: auto;
+    width: 48px !important;
+    border-radius: 10px 0 0 10px;
+    box-shadow: -2px 0 12px rgba(0, 0, 0, 0.12);
+  }
+
+  .resize-handle {
+    display: none;
+  }
+
+  .chat-header {
+    padding: 12px 14px;
+  }
+
+  .quick-actions {
+    padding: 10px 12px;
+  }
+
+  .messages {
+    padding: 12px;
+  }
+
+  .bubble {
+    max-width: 95%;
+  }
+
+  .input-area {
+    padding: 10px 12px 14px;
+  }
+}
 </style>

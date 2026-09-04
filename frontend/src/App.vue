@@ -739,4 +739,59 @@ async function handleRematch() {
   border-radius: 8px;
   font-size: 0.9rem;
 }
+
+/* 移动端：整体纵向排列，侧边栏已在 Sidebar 内部转为顶部导航 */
+@media (max-width: 767px) {
+  .layout {
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  .top-header {
+    padding: 10px 14px;
+  }
+
+  .top-header h1 {
+    margin-bottom: 10px;
+    font-size: 17px;
+  }
+
+  /* 步骤条在窄屏内横向滑动，避免换行撑破布局 */
+  .steps {
+    gap: 6px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .step {
+    flex-shrink: 0;
+    font-size: 12px;
+  }
+
+  .step-number {
+    width: 20px;
+    height: 20px;
+    font-size: 11px;
+  }
+
+  .step-line {
+    width: 14px;
+    flex-shrink: 0;
+  }
+
+  .content-scroll {
+    padding: 14px;
+    gap: 16px;
+  }
+
+  .match-actions {
+    justify-content: stretch;
+  }
+
+  .match-btn {
+    width: 100%;
+    padding: 12px 16px;
+  }
+}
 </style>
