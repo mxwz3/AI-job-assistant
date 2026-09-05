@@ -1,4 +1,20 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+
+def _flatten_education_entry(item) -> str:
+    """LLM 偶尔会把 education 条目返回为 {school, major, date...} 对象，
+    按"时间 学校 专业 学历"顺序拼成一段文字，保持 list[str] 契约。"""
+    if isinstance(item, str):
+        return item
+    if isinstance(item, dict):
+        parts = [
+            item.get("date") or item.get("time") or item.get("period") or "",
+            item.get("school") or item.get("university") or "",
+            item.get("major") or "",
+            item.get("degree") or item.get("education") or item.get("学历") or "",
+        ]
+        return " ".join(p for p in parts if str(p).strip())
+    return str(item) if item is not None else ""
 
 
 class AnalyzeRequest(BaseModel):
@@ -28,6 +44,14 @@ class ResumeInfo(BaseModel):
     certificates: list[str] = Field(default_factory=list, description="证书/奖项列表")
     selfEvaluation: str = Field(default="", description="自我评价")
     other: list[str] = Field(default_factory=list, description="其他信息")
+
+    @field_validator("education", mode="before")
+    @classmethod
+    def _coerce_education_to_strings(cls, value):
+        """兼容 LLM 返回结构化教育经历对象的情况，统一转为字符串列表。"""
+        if not isinstance(value, list):
+            return value
+        return [_flatten_education_entry(item) for item in value]
 
 
 class ResumeUploadResponse(BaseModel):
