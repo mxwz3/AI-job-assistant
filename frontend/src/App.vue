@@ -92,6 +92,8 @@ let observer = null
 
 onMounted(() => {
   restoreState()
+  // 移动端内容区不再是独立滚动容器，观察器以浏览器视口为 root
+  const isMobile = window.matchMedia('(max-width: 767px)').matches
   observer = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
@@ -101,7 +103,7 @@ onMounted(() => {
       })
     },
     {
-      root: document.querySelector('.content-scroll'),
+      root: isMobile ? null : document.querySelector('.content-scroll'),
       rootMargin: '-5% 0px -80% 0px',
       threshold: 0,
     }
@@ -740,12 +742,19 @@ async function handleRematch() {
   font-size: 0.9rem;
 }
 
-/* 移动端：整体纵向排列，侧边栏已在 Sidebar 内部转为顶部导航 */
+/* 移动端：整页随 body 自然纵向滚动，不使用固定高度/内层滚动容器 */
 @media (max-width: 767px) {
   .layout {
     flex-direction: column;
-    height: 100vh;
-    height: 100dvh;
+    height: auto;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
+  .main-content {
+    flex: none;
+    overflow: visible;
   }
 
   .top-header {
@@ -780,9 +789,17 @@ async function handleRematch() {
     flex-shrink: 0;
   }
 
+  /* 内容区回到普通文档流，由 body 统一滚动；底部留出 FAB 安全距离 */
   .content-scroll {
-    padding: 14px;
+    flex: none;
+    overflow: visible;
+    padding: 14px 14px 110px;
     gap: 16px;
+  }
+
+  /* sticky 顶部导航高度约 52px，跳转锚点时预留空间 */
+  .workflow-section {
+    scroll-margin-top: 64px;
   }
 
   .match-actions {

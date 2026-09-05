@@ -1,4 +1,6 @@
 <script setup>
+import { ref } from 'vue'
+
 const props = defineProps({
   activeSection: {
     type: String,
@@ -7,6 +9,9 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['navigate'])
+
+// 移动端菜单展开状态（桌面端 CSS 下菜单始终显示，此状态无影响）
+const menuOpen = ref(false)
 
 // 核心工作流五步导航：仅保留岗位匹配闭环的关键阶段
 const menuItems = [
@@ -17,7 +22,12 @@ const menuItems = [
   { icon: '📝', label: '优化后简历', section: 'section-optimized-resume' },
 ]
 
+function toggleMenu() {
+  menuOpen.value = !menuOpen.value
+}
+
 function handleClick(section) {
+  menuOpen.value = false
   emit('navigate', section)
 }
 </script>
@@ -29,7 +39,23 @@ function handleClick(section) {
       <span class="logo-text">AI求职助手</span>
     </div>
 
-    <nav class="menu">
+    <button
+      class="menu-toggle"
+      type="button"
+      aria-label="打开导航菜单"
+      @click="toggleMenu"
+    >
+      ☰
+    </button>
+
+    <!-- 移动端展开菜单时的透明遮罩，点击关闭 -->
+    <div
+      v-if="menuOpen"
+      class="menu-backdrop"
+      @click="menuOpen = false"
+    ></div>
+
+    <nav class="menu" :class="{ open: menuOpen }">
       <a
         v-for="item in menuItems"
         :key="item.section"
@@ -111,23 +137,35 @@ function handleClick(section) {
   text-align: center;
 }
 
-/* 移动端：侧边栏转为顶部导航，菜单可横向滑动 */
+/* 汉堡按钮与遮罩仅在移动端显示 */
+.menu-toggle {
+  display: none;
+}
+
+.menu-backdrop {
+  display: none;
+}
+
+/* 移动端：侧边栏变为 sticky 顶部导航条，菜单折叠为下拉面板 */
 @media (max-width: 767px) {
   .sidebar {
+    position: sticky;
+    top: 0;
+    z-index: 40;
     width: 100%;
     min-width: 100%;
     height: auto;
     flex-direction: row;
     align-items: center;
+    justify-content: space-between;
     border-right: none;
     border-bottom: 1px solid #e5e7eb;
     overflow: visible;
   }
 
   .logo {
-    padding: 10px 12px 10px 14px;
+    padding: 10px 14px;
     border-bottom: none;
-    flex-shrink: 0;
   }
 
   .logo-icon {
@@ -135,29 +173,62 @@ function handleClick(section) {
   }
 
   .logo-text {
-    font-size: 15px;
+    font-size: 16px;
   }
 
+  .menu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    margin-right: 10px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #fff;
+    color: #1f2937;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  /* 菜单默认收起（占位为 0），展开时为绝对定位下拉面板 */
   .menu {
-    flex-direction: row;
-    flex: 1;
-    min-width: 0;
-    padding: 8px 10px 8px 4px;
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    padding: 8px 12px 12px;
     gap: 2px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    background: #fff;
+    border-bottom: 1px solid #e5e7eb;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+
+  .menu.open {
+    display: flex;
   }
 
   .menu-item {
-    flex-shrink: 0;
-    gap: 6px;
-    padding: 8px 10px;
-    font-size: 13px;
+    padding: 12px 14px;
+    font-size: 15px;
   }
 
   .menu-icon {
-    font-size: 15px;
-    width: auto;
+    font-size: 17px;
+    width: 24px;
+  }
+
+  .menu-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: rgba(0, 0, 0, 0.25);
   }
 }
 </style>

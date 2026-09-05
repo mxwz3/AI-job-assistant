@@ -38,6 +38,10 @@ onMounted(() => {
   }
   const savedCollapsed = localStorage.getItem(COLLAPSE_KEY)
   collapsed.value = savedCollapsed === 'true'
+  // 移动端默认收起为悬浮按钮，避免全屏面板遮挡内容
+  if (window.matchMedia('(max-width: 767px)').matches) {
+    collapsed.value = true
+  }
 })
 
 function startResize(event) {
@@ -583,8 +587,44 @@ function adjustHeight(event) {
   color: #111827;
 }
 
-/* 移动端：AI 助手变为全屏浮层（覆盖拖拽宽度的内联样式），收起时为右缘悬浮按钮 */
+/* 移动端：收起时为右下角悬浮按钮，展开时为全屏浮层（覆盖内联拖拽宽度） */
 @media (max-width: 767px) {
+  /* 收起态：右下角胶囊悬浮按钮，不遮挡内容、不阻止页面滑动 */
+  .chat-assistant.collapsed {
+    position: fixed;
+    top: auto;
+    right: 16px;
+    bottom: 20px;
+    left: auto;
+    width: auto !important;
+    height: auto;
+    z-index: 90;
+    border-radius: 999px;
+    border: none;
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.35);
+    background: #2563eb;
+    cursor: pointer;
+  }
+
+  .chat-assistant.collapsed .collapsed-bar {
+    writing-mode: horizontal-tb;
+    padding: 12px 18px;
+    background: transparent;
+  }
+
+  .chat-assistant.collapsed .collapsed-label {
+    color: #fff;
+    font-size: 14px;
+    letter-spacing: 0;
+    padding: 0;
+    white-space: nowrap;
+  }
+
+  .chat-assistant.collapsed .collapsed-label::before {
+    content: '🤖 ';
+  }
+
+  /* 展开态：全屏浮层 */
   .chat-assistant {
     position: fixed;
     top: 0;
@@ -594,16 +634,9 @@ function adjustHeight(event) {
     width: 100% !important;
     height: 100vh;
     height: 100dvh;
-    z-index: 50;
+    z-index: 100;
     border-left: none;
     box-shadow: -2px 0 16px rgba(0, 0, 0, 0.15);
-  }
-
-  .chat-assistant.collapsed {
-    left: auto;
-    width: 48px !important;
-    border-radius: 10px 0 0 10px;
-    box-shadow: -2px 0 12px rgba(0, 0, 0, 0.12);
   }
 
   .resize-handle {
