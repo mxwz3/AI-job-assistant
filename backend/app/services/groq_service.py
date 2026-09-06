@@ -14,7 +14,9 @@ from app.models.schemas import (
     ResumeInfo,
 )
 
-SYSTEM_PROMPT = """你是一位专业的 HR 与 AI 产品经理求职顾问。用户会提供一段招聘 JD（职位描述），请仔细分析并提取结构化信息。
+SYSTEM_PROMPT = """你是一位专业的 HR 与职业求职顾问，擅长分析不同类型岗位的招聘 JD。用户会提供一段招聘 JD（职位描述），请仔细分析并提取结构化信息。
+
+请根据当前 JD 的实际岗位类型、职责和要求进行分析，不预设岗位属于某一特定职业方向。
 
 要求：
 1. 仅基于 JD 原文进行分析，不要编造不存在的信息
@@ -25,8 +27,8 @@ SYSTEM_PROMPT = """你是一位专业的 HR 与 AI 产品经理求职顾问。�
 返回 JSON 字段说明：
 - job_title: 岗位名称（字符串）
 - responsibilities: 岗位职责列表
-- ai_skills: AI 相关技能（如 LLM、Prompt Engineering、RAG、Agent、机器学习等）
-- product_skills: 产品相关技能（如需求分析、用户研究、PRD、数据分析、Axure 等）
+- ai_skills: 仅提取 JD 中明确要求或涉及的 AI 相关技能（如 LLM、Prompt Engineering、RAG、Agent、机器学习等）；如果岗位与 AI 无关，返回空数组
+- product_skills: 仅提取 JD 中明确要求或涉及的产品相关技能（如需求分析、用户研究、PRD、数据分析、Axure 等）；如果岗位与产品无关，返回空数组
 - soft_skills: 软技能（如沟通能力、跨部门协作、项目管理等）
 - requirements: 硬性要求（学历、工作经验、行业背景等）"""
 
@@ -54,8 +56,9 @@ RESUME_EXTRACTION_PROMPT = """你是一名资深 HR，擅长从简历中提取�
 2. 提取是"结构化整理"，不是"总结删减"，项目/实习描述应保留原文事实细节
 3. 必须返回合法 JSON，不要包含 markdown 代码块或其他多余文字"""
 
-MATCH_PROMPT = """你是一名资深互联网招聘专家和AI产品经理。
+MATCH_PROMPT = """你是一名资深招聘专家和职业发展顾问，擅长分析不同岗位类型下的简历与 JD 匹配度。
 根据用户简历和岗位JD，分析匹配程度，并给出具体可执行修改建议。
+岗位类型由 JD 的实际内容决定，不预设岗位属于产品、研发、技术、测试、市场、运营或其他特定方向。
 输出严格JSON，不输出其他内容。
 
 返回 JSON 字段说明：
